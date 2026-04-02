@@ -311,11 +311,11 @@ sim_crispr <- function(method = "exp",
   ytX_reps <- list()
   ytX_lgst_reps <- list()
   for (i_reps in 1:(reps*2)) {
-    extra_gr <- as.matrix(cbind(sg_eff*ko_eff+simCRISPR::BLEH(bleh_SD, n_total),
-                                trt_eff+simCRISPR::BLEH(bleh_SD, n_total),
-                                ko_eff*sg_trt_eff+simCRISPR::BLEH(bleh_SD, n_total),
-                                disturb_eff+simCRISPR::BLEH(bleh_SD, n_total),
-                                distb_trt_eff+simCRISPR::BLEH(bleh_SD, n_total))) %*% t(contrast_mat)
+    extra_gr <- as.matrix(cbind(sg_eff*ko_eff+simCRISPR::sample_noise(sample_noise_SD, n_total),
+                                trt_eff+simCRISPR::sample_noise(sample_noise_SD, n_total),
+                                ko_eff*sg_trt_eff+simCRISPR::sample_noise(sample_noise_SD, n_total),
+                                disturb_eff+simCRISPR::sample_noise(sample_noise_SD, n_total),
+                                distb_trt_eff+simCRISPR::sample_noise(sample_noise_SD, n_total))) %*% t(contrast_mat)
     extra_gr[,1] <- sim_noise(sd=noise_SD, n_total)
     extra_gr[,3] <- extra_gr[,3]+sim_noise(sd=noise_SD, n_total)
     gr <- orig_gr + extra_gr
