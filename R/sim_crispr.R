@@ -136,7 +136,7 @@ sim_crispr <- function(method = "exp",
   #### Try to distinguish non targetting vs safe harbor (safe harbor make still have a "KO" effect due to cutting hurting the cell's overall fitness)
 
   valid_methods <- c("logit", "exp", "both")
-  if (!method %in% valid_methods) {stop("Invalid method specified. Use 'logistic' or 'exponential'.")}
+  if (!method %in% valid_methods) {stop("Invalid method specified. Use 'logit', 'exp', or 'both'.")}
 
   valid_samples <- c("independent", "matched")
   if (!samples %in% valid_samples) {stop("Invalid samples specified. Use 'independent' or 'matched'.")}
@@ -323,13 +323,13 @@ sim_crispr <- function(method = "exp",
     y0_rep <- floor(y0+10*y0_noise())
     y0_rep <- pmax(y0_rep, min_initial_count)
 
-    if (method == "exp" | method == "both") {
+    if (method == "exp" || method == "both") {
       ytX <- as.data.frame(floor(y0_rep*exp(gr*days)))
       colnames(ytX) <- paste(colnames(ytX), "_rep", i_reps, sep = "")
       ytX_reps[[i_reps]] <- ytX
     }
 
-    if (method == "logit" | method == "both") {
+    if (method == "logit" || method == "both") {
       ytX_lgst <- as.data.frame(floor(L/(1+((L/y0_rep)-1)*exp((-1)*gr*days))))
       colnames(ytX_lgst) <- paste(colnames(ytX_lgst), "_rep", i_reps, sep = "")
       ytX_lgst_reps[[i_reps]] <- ytX_lgst
