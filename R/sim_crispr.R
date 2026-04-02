@@ -316,7 +316,7 @@ sim_crispr <- function(method = "exp",
                                 ko_eff*sg_trt_eff+simCRISPR::sample_noise(sample_noise_SD, n_total),
                                 disturb_eff+simCRISPR::sample_noise(sample_noise_SD, n_total),
                                 distb_trt_eff+simCRISPR::sample_noise(sample_noise_SD, n_total))) %*% t(contrast_mat)
-    extra_gr[,1] <- sim_noise(sd=noise_SD, n_total)
+    extra_gr[,1] <- sim_noise(sd=noise_SD, n_total = n_total)
     extra_gr[,3] <- extra_gr[,3]+sim_noise(sd=noise_SD, n_total)
     gr <- orig_gr + extra_gr
 
@@ -364,7 +364,7 @@ sim_crispr <- function(method = "exp",
 
   y0s_df <- as.data.frame(do.call(cbind, y0_reps))
 
-  if (method == "exp" | method == "both") {
+  if (method == "exp" || method == "both") {
     raw_exp_count_wide <- do.call(cbind, ytX_reps)
     rownames(raw_exp_count_wide) <- rownames(true_eff_t)
 
@@ -378,7 +378,7 @@ sim_crispr <- function(method = "exp",
     sub_exp_wide_data <- raw_exp_count_wide[,grep("ko", colnames(raw_exp_count_wide))]
   }
 
-  if (method == "logit" | method == "both"){
+  if (method == "logit" || method == "both"){
     raw_lgst_count_wide <- do.call(cbind, ytX_lgst_reps)
     rownames(raw_lgst_count_wide) <- rownames(true_eff_t)
 
