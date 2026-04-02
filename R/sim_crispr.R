@@ -8,7 +8,7 @@
 #'
 #' @return A numeric vector of length `n_total` with identical noise values.
 #' @importFrom stats rnorm
-BLEH <- function(SD, n_total) {
+sample_noise <- function(SD, n_total) {
   return( rep(stats::rnorm(1, mean = 0, sd=SD), n_total))
 }
 
