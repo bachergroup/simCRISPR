@@ -231,10 +231,12 @@ sim_crispr <- function(method = "exp",
   sg_eff <- c(rep(0, n_ntgt + n_sfhb), sg_eff)
 
   # DNA disturb effect
-  disturb_eff <- c(rep(0, n_ntgt), stats::rnorm(n_sgRNA+n_sfhb, mean=distbDNA_mu, sd=distbDNA_sd))
+  disturb_eff_raw <- stats::rnorm(n_sgRNA + n_sfhb, mean = distbDNA_mu, sd = distbDNA_sd)
+  disturb_eff <- c(rep(0, n_ntgt), sign(distbDNA_mu) * abs(disturb_eff_raw))
 
   # treatment or toxin effects # negative value indicates a toxin
-  trt_eff <- stats::rnorm(n_total, mean = trt_eff_mu, sd=trt_eff_sd)
+  trt_eff_raw <- stats::rnorm(n_total, mean = trt_eff_mu, sd = trt_eff_sd)
+  trt_eff <- sign(trt_eff_mu) * abs(trt_eff_raw)
 
   # interactive effect between sgRNA and treatment/toxin from a exponential distribution
   if (is.null(sg_trt_eff_mu2)) sg_trt_eff_mu2 <- (-1) * sg_trt_eff_mu1
