@@ -8,7 +8,7 @@
 #'
 #' @return A numeric vector of length `n_total` with identical noise values.
 #' @importFrom stats rnorm
-BLEH <- function(SD, n_total) {
+sample_noise <- function(SD, n_total) {
   return( rep(stats::rnorm(1, mean = 0, sd=SD), n_total))
 }
 
@@ -45,31 +45,23 @@ sim_noise <- function(sd=0.5, n_total){
 #' @param trt_eff_mu Mean of the treatment effect.
 #' @param trt_eff_sd Standard deviation of the treatment effect.
 #'
-#' @param sg_eff_prop1 Proportion of sgRNAs with a primary knockout effect.
-#' @param sg_eff_mu1 Mean of the primary sgRNA knockout effect.
-#' @param sg_eff_sd1 Standard deviation of the primary sgRNA knockout effect.
-#' @param sg_eff_mu2 Mean of the remaining sgRNA knockout effects (used when not assigned to sg_eff_mu1). If not provided, defaults to -1*`sg_eff_mu1`.
-#' @param sg_eff_sd2 Standard deviation of the remaining sgRNA knockout effects. If not provided, defaults to `sg_eff_sd1`.
+#' @param sg_eff_prop1 Proportion of sgRNAs with negative knockout effects.
+#' @param sg_eff_mu1 Mean knockout effect for sgRNAs with negative effects.
+#' @param sg_eff_mu2 Mean knockout effect for sgRNAs with positive effects. If not provided, defaults to -1*`sg_eff_mu1`.
 #'
 #' @param distbDNA_mu Mean of the DNA damage response effect.
 #' @param distbDNA_sd Standard deviation of the DNA damage response effect.
 #'
-#' @param sg_trt_eff_prop1 Proportion of sgRNAs with interaction effects between sgRNA and treatment from the primary group.
-#' @param sg_trt_eff_mu1 Mean of the sgRNA-treatment interaction effect for the primary group.
-#' @param sg_trt_eff_sd1 Standard deviation of the sgRNA-treatment interaction effect for the primary group.
-#' @param sg_trt_eff_mu2 Mean of the remaining sgRNA-treatment interaction effects. If not provided, defaults to -1*`sg_trt_eff_mu1`.
-#' @param sg_trt_eff_sd2 Standard deviation of the remaining sgRNA-treatment interaction effects. If not provided, defaults to `sg_trt_eff_sd1`.
-#' @param prop_sg_trt Proportion of sgRNAs under treatment conditions.
+#' @param sg_trt_eff_prop1 Proportion of sgRNAs with negative interaction effects between sgRNA knockout and treatment.
+#' @param sg_trt_eff_mu1 Mean interaction effect between sgRNA knockout and treatment for sgRNAs with negative interaction effects.
+#' @param sg_trt_eff_mu2 Mean interaction effect between sgRNA knockout and treatment for sgRNAs with positive interaction effects. If not provided, defaults to -1*`sg_trt_eff_mu1`.
 #'
-#' @param distb_trt_eff_prop1 Proportion of sgRNAs with DNA damage-treatment interaction effects from the primary group.
-#' @param distb_trt_eff_mu1 Mean of the DNA damage-treatment interaction effect (primary group).
-#' @param distb_trt_eff_sd1 Standard deviation of the DNA damage-treatment interaction effect (primary group).
-#' @param distb_trt_eff_mu2 Mean of the remaining DNA damage-treatment interaction effects.
-#' @param distb_trt_eff_sd2 Standard deviation of the remaining DNA damage-treatment interaction effects.
-#' @param prop_distb_trt Proportion of sgRNAs assigned DNA damage-treatment interaction effects.
+#' @param distb_trt_eff_prop1 Proportion of sgRNAs with negative interaction effects between DNA damage response and treatment.
+#' @param distb_trt_eff_mu1 Mean interaction effect between DNA damage response and treatment for sgRNAs with negative interaction effects.
+#' @param distb_trt_eff_mu2 Mean interaction effect between DNA damage response and treatment for sgRNAs with positive interaction effects. If not provided, defaults to -1*`distb_trt_eff_mu1`.
 #'
-#' @param bleh_SD Standard deviation of random noise across different conditions or replicates.
-#' @param noise_SD Standard deviation of additional technical noise applied to knockout samples.
+#' @param sample_noise_SD Standard deviation of shared sample-level noise added to all sgRNAs within a simulated condition.
+#' @param noise_SD Standard deviation of additional sgRNA-specific technical noise added during growth-rate simulation.
 #' @param days Number of time points (e.g., days) across which the experiment is simulated.
 #' @param reps Number of biological replicates per condition.
 #' @param n_total Total number of sgRNAs, including knockout, non-targeting, and safe harbor controls.
@@ -112,30 +104,22 @@ sim_crispr <- function(method = "exp",
                        trt_eff_mu= -0.5,
                        trt_eff_sd= 0.01,
 
-                       sg_eff_prop1 = 0.5, ##Set large KO effect
+                       sg_eff_prop1 = 0.8,
                        sg_eff_mu1 = -0.3,
-                       sg_eff_sd1 = 0.1,
                        sg_eff_mu2 = NULL,
-                       sg_eff_sd2 = NULL,
 
                        distbDNA_sd=0.02,
                        distbDNA_mu=-0.01,
 
                        sg_trt_eff_prop1 = 0.7,
                        sg_trt_eff_mu1 = -0.2,
-                       sg_trt_eff_sd1 = 0.1,
                        sg_trt_eff_mu2 = NULL,
-                       sg_trt_eff_sd2 = NULL,
-                       prop_sg_trt=0.4,
 
                        distb_trt_eff_prop1 = 1,
                        distb_trt_eff_mu1 = -0.001,
-                       distb_trt_eff_sd1 = 0.1,
                        distb_trt_eff_mu2 = NULL,
-                       distb_trt_eff_sd2 = NULL,
-                       prop_distb_trt=0.4,
 
-                       bleh_SD=0.1,
+                       sample_noise_SD = 0.1,
                        noise_SD=0.005,
                        days=5,
                        reps=3,
@@ -152,7 +136,7 @@ sim_crispr <- function(method = "exp",
   #### Try to distinguish non targetting vs safe harbor (safe harbor make still have a "KO" effect due to cutting hurting the cell's overall fitness)
 
   valid_methods <- c("logit", "exp", "both")
-  if (!method %in% valid_methods) {stop("Invalid method specified. Use 'logistic' or 'exponential'.")}
+  if (!method %in% valid_methods) {stop("Invalid method specified. Use 'logit', 'exp', or 'both'.")}
 
   valid_samples <- c("independent", "matched")
   if (!samples %in% valid_samples) {stop("Invalid samples specified. Use 'independent' or 'matched'.")}
@@ -223,45 +207,71 @@ sim_crispr <- function(method = "exp",
 
 
 
-  # knock out efficiency based on beta distribution
-  # ko_eff_mode <- 0.8; ko_eff_shape2 <- 5
-  # ko_eff <- rbeta(n_sgRNA, shape1 = (ko_eff_mode*(ko_eff_shape2-2)+1)/(1-ko_eff_mode), shape2 = ko_eff_shape2)
-  # hist(ko_eff)
-  ko_eff <- c(rep(0, n_ntgt), rep(1, n_sfhb), rep(1, n_sgRNA))
+  # knockout effect
+  # KO indicator: 1 for targeting sgRNAs, 0 for ntgt/sfhb
+  ko_eff <- c(rep(0, n_ntgt), rep(0, n_sfhb), rep(1, n_sgRNA))
 
-  # sgRNA effects on sgRNA only
-  if(is.null(sg_eff_mu2)) sg_eff_mu2 <- (-1)*sg_eff_mu1
-  if(is.null(sg_eff_sd2)) sg_eff_sd2 <- sg_eff_sd1
-  sg_eff_prop2 <- 1-sg_eff_prop1
-  sg_eff <- rbinorm(n=n_sgRNA, mean1=sg_eff_mu1, mean2=sg_eff_mu2, sd1=sg_eff_sd1,
-                                sd2=sg_eff_sd2, prop = sg_eff_prop1)
-  sg_eff <- c(rep(0, n_ntgt+n_sfhb), sg_eff)
+  if (is.null(sg_eff_mu2)) sg_eff_mu2 <- (-1)*sg_eff_mu1
+
+  # assign sgRNAs into two groups
+  is_group1 <- stats::rbinom(n_sgRNA, size = 1, prob = sg_eff_prop1) == 1
+
+  lambda_neg <- 1 / abs(sg_eff_mu1)
+  lambda_pos <- 1 / abs(sg_eff_mu2)
+
+  mag <- numeric(n_sgRNA)
+  mag[ is_group1] <- stats::rexp(sum( is_group1), rate = lambda_neg)
+  mag[!is_group1] <- stats::rexp(sum(!is_group1), rate = lambda_pos)
+
+  # apply sign
+  sg_eff <- mag
+  sg_eff[ is_group1] <- sign(sg_eff_mu1) * sg_eff[ is_group1]
+  sg_eff[!is_group1] <- sign(sg_eff_mu2) * sg_eff[!is_group1]
+
+  sg_eff <- c(rep(0, n_ntgt + n_sfhb), sg_eff)
 
   # DNA disturb effect
-  disturb_eff <- c(rep(0, n_ntgt), stats::rnorm(n_sgRNA+n_sfhb, mean=distbDNA_mu, sd=distbDNA_sd))
+  disturb_eff_raw <- stats::rnorm(n_sgRNA + n_sfhb, mean = distbDNA_mu, sd = distbDNA_sd)
+  disturb_eff <- c(rep(0, n_ntgt), sign(distbDNA_mu) * abs(disturb_eff_raw))
 
   # treatment or toxin effects # negative value indicates a toxin
-  trt_eff <- stats::rnorm(n_total, mean = trt_eff_mu, sd=trt_eff_sd)
+  trt_eff_raw <- stats::rnorm(n_total, mean = trt_eff_mu, sd = trt_eff_sd)
+  trt_eff <- sign(trt_eff_mu) * abs(trt_eff_raw)
 
-  # interactive effect between sgRNA and treatment/toxin from a bimodal distribution
-  if(is.null(sg_trt_eff_mu2)) sg_trt_eff_mu2 <- (-1)*sg_trt_eff_mu1
-  if(is.null(sg_trt_eff_sd2)) sg_trt_eff_sd2 <- sg_trt_eff_sd1
-  sg_trt_eff_prop2 <- 1-sg_trt_eff_prop1
-  sg_trt_eff <- rbinorm(n=n_sgRNA, mean1=sg_trt_eff_mu1, mean2=sg_trt_eff_mu2,
-                                    sd1=sg_trt_eff_sd1, sd2=sg_trt_eff_sd2, prop = sg_trt_eff_prop1)
-  I_sg_trt <- sample(c(0, 1), size = n_sgRNA, replace = T, prob = c(1-prop_sg_trt, prop_sg_trt))
-  sg_trt_eff <- I_sg_trt*sg_trt_eff
-  sg_trt_eff <- c(rep(0, n_ntgt+n_sfhb), sg_trt_eff)
+  # interactive effect between sgRNA and treatment/toxin from a exponential distribution
+  if (is.null(sg_trt_eff_mu2)) sg_trt_eff_mu2 <- (-1) * sg_trt_eff_mu1
+  is_group1 <- stats::rbinom(n_sgRNA, size = 1, prob = sg_trt_eff_prop1) == 1
+  # rates for exponential magnitudes (mu should be non-zero)
+  lambda1 <- 1 / abs(sg_trt_eff_mu1)
+  lambda2 <- 1 / abs(sg_trt_eff_mu2)
 
+  mag <- numeric(n_sgRNA)
+  mag[ is_group1] <- stats::rexp(sum( is_group1), rate = lambda1)
+  mag[!is_group1] <- stats::rexp(sum(!is_group1), rate = lambda2)
 
-  # interactive effect between distrub DNA and treatment/toxin from a bimodal distribution
-  if(is.null(distb_trt_eff_mu2)) distb_trt_eff_mu2 <- (-1)*distb_trt_eff_mu1
-  if(is.null(distb_trt_eff_sd2)) distb_trt_eff_sd2 <- distb_trt_eff_sd1
-  distb_trt_eff_prop2 <- 1-distb_trt_eff_prop1
-  distb_trt_eff <- rbinorm(n=n_sfhb+n_sgRNA, mean1=distb_trt_eff_mu1, mean2=distb_trt_eff_mu2,
-                                       sd1=distb_trt_eff_sd1, sd2=distb_trt_eff_sd2, prop = distb_trt_eff_prop1)
-  I_distb_trt <- sample(c(0, 1), size = n_sfhb+n_sgRNA, replace = T, prob = c(1-prop_distb_trt, prop_distb_trt))
-  distb_trt_eff <- I_distb_trt*distb_trt_eff
+  # apply sign according to the sign of mu1/mu2
+  sg_trt_eff <- mag
+  sg_trt_eff[ is_group1] <- sign(sg_trt_eff_mu1) * sg_trt_eff[ is_group1]
+  sg_trt_eff[!is_group1] <- sign(sg_trt_eff_mu2) * sg_trt_eff[!is_group1]
+
+  # prepend zeros for ntgt + sfhb
+  sg_trt_eff <- c(rep(0, n_ntgt + n_sfhb), sg_trt_eff)
+
+  # interactive effect between distrub DNA and treatment/toxin from a exponential
+  if (is.null(distb_trt_eff_mu2)) distb_trt_eff_mu2 <- (-1) * distb_trt_eff_mu1
+  n_distb <- n_sfhb + n_sgRNA
+  is_group1 <- stats::rbinom(n_distb, size = 1, prob = distb_trt_eff_prop1) == 1
+  lambda1 <- 1 / abs(distb_trt_eff_mu1)
+  lambda2 <- 1 / abs(distb_trt_eff_mu2)
+  mag <- numeric(n_distb)
+  mag[ is_group1] <- stats::rexp(sum( is_group1), rate = lambda1)
+  mag[!is_group1] <- stats::rexp(sum(!is_group1), rate = lambda2)
+
+  distb_trt_eff <- mag
+  distb_trt_eff[ is_group1] <- sign(distb_trt_eff_mu1) * distb_trt_eff[ is_group1]
+  distb_trt_eff[!is_group1] <- sign(distb_trt_eff_mu2) * distb_trt_eff[!is_group1]
+
+  # prepend zeros for ntgt only
   distb_trt_eff <- c(rep(0, n_ntgt), distb_trt_eff)
 
 
@@ -303,24 +313,25 @@ sim_crispr <- function(method = "exp",
   ytX_reps <- list()
   ytX_lgst_reps <- list()
   for (i_reps in 1:(reps*2)) {
-    extra_gr <- as.matrix(cbind(sg_eff*ko_eff+simCRISPR::BLEH(bleh_SD, n_total),
-                                trt_eff+simCRISPR::BLEH(bleh_SD, n_total),
-                                ko_eff*sg_trt_eff+simCRISPR::BLEH(bleh_SD, n_total),
-                                disturb_eff+simCRISPR::BLEH(bleh_SD, n_total),
-                                distb_trt_eff+simCRISPR::BLEH(bleh_SD, n_total))) %*% t(contrast_mat)
-    extra_gr[,1] <- sim_noise(sd=noise_SD, n_total)
+    extra_gr <- as.matrix(cbind(sg_eff*ko_eff+simCRISPR::sample_noise(sample_noise_SD, n_total),
+                                trt_eff+simCRISPR::sample_noise(sample_noise_SD, n_total),
+                                ko_eff*sg_trt_eff+simCRISPR::sample_noise(sample_noise_SD, n_total),
+                                disturb_eff+simCRISPR::sample_noise(sample_noise_SD, n_total),
+                                distb_trt_eff+simCRISPR::sample_noise(sample_noise_SD, n_total))) %*% t(contrast_mat)
+    extra_gr[,1] <- sim_noise(sd=noise_SD, n_total = n_total)
     extra_gr[,3] <- extra_gr[,3]+sim_noise(sd=noise_SD, n_total)
     gr <- orig_gr + extra_gr
 
     y0_rep <- floor(y0+10*y0_noise())
+    y0_rep <- pmax(y0_rep, min_initial_count)
 
-    if (method == "exp" | method == "both") {
+    if (method == "exp" || method == "both") {
       ytX <- as.data.frame(floor(y0_rep*exp(gr*days)))
       colnames(ytX) <- paste(colnames(ytX), "_rep", i_reps, sep = "")
       ytX_reps[[i_reps]] <- ytX
     }
 
-    if (method == "logit" | method == "both") {
+    if (method == "logit" || method == "both") {
       ytX_lgst <- as.data.frame(floor(L/(1+((L/y0_rep)-1)*exp((-1)*gr*days))))
       colnames(ytX_lgst) <- paste(colnames(ytX_lgst), "_rep", i_reps, sep = "")
       ytX_lgst_reps[[i_reps]] <- ytX_lgst
@@ -355,7 +366,7 @@ sim_crispr <- function(method = "exp",
 
   y0s_df <- as.data.frame(do.call(cbind, y0_reps))
 
-  if (method == "exp" | method == "both") {
+  if (method == "exp" || method == "both") {
     raw_exp_count_wide <- do.call(cbind, ytX_reps)
     rownames(raw_exp_count_wide) <- rownames(true_eff_t)
 
@@ -369,7 +380,7 @@ sim_crispr <- function(method = "exp",
     sub_exp_wide_data <- raw_exp_count_wide[,grep("ko", colnames(raw_exp_count_wide))]
   }
 
-  if (method == "logit" | method == "both"){
+  if (method == "logit" || method == "both"){
     raw_lgst_count_wide <- do.call(cbind, ytX_lgst_reps)
     rownames(raw_lgst_count_wide) <- rownames(true_eff_t)
 
@@ -377,7 +388,7 @@ sim_crispr <- function(method = "exp",
                                                   grep("ctrl_trt_rep", colnames(raw_lgst_count_wide), fixed = T),
                                                   grep("ko_rep", colnames(raw_lgst_count_wide), fixed = T),
                                                   grep("ko_trt_rep", colnames(raw_lgst_count_wide), fixed = T))]
-    raw_lgst_count_wide <- as.data.frame()
+    raw_lgst_count_wide <- as.data.frame(raw_lgst_count_wide)
     raw_lgst_count_wide <- as.data.frame(cbind(y0s_df[,picky0cols], raw_lgst_count_wide[,pickallcols]))
 
     sub_lgst_wide_data <- raw_lgst_count_wide[,grep("ko", colnames(raw_lgst_count_wide))]

@@ -11,26 +11,18 @@ sim_crispr(
   baseline_gr = 1,
   trt_eff_mu = -0.5,
   trt_eff_sd = 0.01,
-  sg_eff_prop1 = 0.5,
+  sg_eff_prop1 = 0.8,
   sg_eff_mu1 = -0.3,
-  sg_eff_sd1 = 0.1,
   sg_eff_mu2 = NULL,
-  sg_eff_sd2 = NULL,
   distbDNA_sd = 0.02,
   distbDNA_mu = -0.01,
   sg_trt_eff_prop1 = 0.7,
   sg_trt_eff_mu1 = -0.2,
-  sg_trt_eff_sd1 = 0.1,
   sg_trt_eff_mu2 = NULL,
-  sg_trt_eff_sd2 = NULL,
-  prop_sg_trt = 0.4,
   distb_trt_eff_prop1 = 1,
   distb_trt_eff_mu1 = -0.001,
-  distb_trt_eff_sd1 = 0.1,
   distb_trt_eff_mu2 = NULL,
-  distb_trt_eff_sd2 = NULL,
-  prop_distb_trt = 0.4,
-  bleh_SD = 0.1,
+  sample_noise_SD = 0.1,
   noise_SD = 0.005,
   days = 5,
   reps = 3,
@@ -58,47 +50,31 @@ sim_crispr(
 
 \item{trt_eff_sd}{Standard deviation of the treatment effect.}
 
-\item{sg_eff_prop1}{Proportion of sgRNAs with a primary knockout effect.}
+\item{sg_eff_prop1}{Proportion of sgRNAs with negative knockout effects.}
 
-\item{sg_eff_mu1}{Mean of the primary sgRNA knockout effect.}
+\item{sg_eff_mu1}{Mean knockout effect for sgRNAs with negative effects.}
 
-\item{sg_eff_sd1}{Standard deviation of the primary sgRNA knockout effect.}
-
-\item{sg_eff_mu2}{Mean of the remaining sgRNA knockout effects (used when not assigned to sg_eff_mu1). If not provided, defaults to -1*`sg_eff_mu1`.}
-
-\item{sg_eff_sd2}{Standard deviation of the remaining sgRNA knockout effects. If not provided, defaults to `sg_eff_sd1`.}
+\item{sg_eff_mu2}{Mean knockout effect for sgRNAs with positive effects. If not provided, defaults to -1*`sg_eff_mu1`.}
 
 \item{distbDNA_sd}{Standard deviation of the DNA damage response effect.}
 
 \item{distbDNA_mu}{Mean of the DNA damage response effect.}
 
-\item{sg_trt_eff_prop1}{Proportion of sgRNAs with interaction effects between sgRNA and treatment from the primary group.}
+\item{sg_trt_eff_prop1}{Proportion of sgRNAs with negative interaction effects between sgRNA knockout and treatment.}
 
-\item{sg_trt_eff_mu1}{Mean of the sgRNA-treatment interaction effect for the primary group.}
+\item{sg_trt_eff_mu1}{Mean interaction effect between sgRNA knockout and treatment for sgRNAs with negative interaction effects.}
 
-\item{sg_trt_eff_sd1}{Standard deviation of the sgRNA-treatment interaction effect for the primary group.}
+\item{sg_trt_eff_mu2}{Mean interaction effect between sgRNA knockout and treatment for sgRNAs with positive interaction effects. If not provided, defaults to -1*`sg_trt_eff_mu1`.}
 
-\item{sg_trt_eff_mu2}{Mean of the remaining sgRNA-treatment interaction effects. If not provided, defaults to -1*`sg_trt_eff_mu1`.}
+\item{distb_trt_eff_prop1}{Proportion of sgRNAs with negative interaction effects between DNA damage response and treatment.}
 
-\item{sg_trt_eff_sd2}{Standard deviation of the remaining sgRNA-treatment interaction effects. If not provided, defaults to `sg_trt_eff_sd1`.}
+\item{distb_trt_eff_mu1}{Mean interaction effect between DNA damage response and treatment for sgRNAs with negative interaction effects.}
 
-\item{prop_sg_trt}{Proportion of sgRNAs under treatment conditions.}
+\item{distb_trt_eff_mu2}{Mean interaction effect between DNA damage response and treatment for sgRNAs with positive interaction effects. If not provided, defaults to -1*`distb_trt_eff_mu1`.}
 
-\item{distb_trt_eff_prop1}{Proportion of sgRNAs with DNA damage-treatment interaction effects from the primary group.}
+\item{sample_noise_SD}{Standard deviation of shared sample-level noise added to all sgRNAs within a simulated condition.}
 
-\item{distb_trt_eff_mu1}{Mean of the DNA damage-treatment interaction effect (primary group).}
-
-\item{distb_trt_eff_sd1}{Standard deviation of the DNA damage-treatment interaction effect (primary group).}
-
-\item{distb_trt_eff_mu2}{Mean of the remaining DNA damage-treatment interaction effects.}
-
-\item{distb_trt_eff_sd2}{Standard deviation of the remaining DNA damage-treatment interaction effects.}
-
-\item{prop_distb_trt}{Proportion of sgRNAs assigned DNA damage-treatment interaction effects.}
-
-\item{bleh_SD}{Standard deviation of random noise across different conditions or replicates.}
-
-\item{noise_SD}{Standard deviation of additional technical noise applied to knockout samples.}
+\item{noise_SD}{Standard deviation of additional sgRNA-specific technical noise added during growth-rate simulation.}
 
 \item{days}{Number of time points (e.g., days) across which the experiment is simulated.}
 

@@ -114,7 +114,7 @@ sequenceStep <- function(amp_frags, totalDepth, sf_sd=0.03) {
   totalM <- colSums(amp_frags)
   target <- min(totalM)
   useMean <- target / totalM
-  SF <- useMean + stats::rnorm(length(useMean), 0, sd = sf_sd)
+  SF <- useMean + stats::rnorm(length(useMean), 1, sd = sf_sd)
   SF[SF>1] <- 1
   SF[SF<0] <- 1e-4
   totalM <- totalM * SF
