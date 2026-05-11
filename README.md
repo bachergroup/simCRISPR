@@ -12,7 +12,7 @@ You can install `simCRISPR` from GitHub using:
 ```{r}
 if (!requireNamespace("devtools", quietly=TRUE))
     install.packages("devtools")
-devtools::install_github("xiaorudong/simCRISPR")
+devtools::install_github("bachergroup/simCRISPR")
 ```
 ## Example
 Here is a basic example of how to use the `simCRISPR` package to generate pooled CRISPR screening data:
