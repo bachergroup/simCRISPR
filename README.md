@@ -1,6 +1,7 @@
-<img src='man/figs/simCRISPR_hexsticker_dots.png' align='left' height='20%' width='20%'/>
-<br>
-<br>
+<p align="left">
+  <img src="man/figs/simCRISPR_hexsticker_dots.png" alt="simCRISPR logo" width="180" />
+</p>
+
 
 # simCRISPR
 
