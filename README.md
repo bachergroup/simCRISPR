@@ -1,3 +1,7 @@
+<img src='man/figs/simCRISPR_hexsticker_dots.png' align='left' height='20%' width='20%'/>
+<br>
+<br>
+
 # simCRISPR
 
 **simCRISPR** is an R package for simulating pooled CRISPR screening data under various experimental designs. 
